@@ -13,6 +13,7 @@ namespace CupidServer
             // Add services to the container.
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddSignalR();
+            builder.Services.AddSingleton<UserStore>();
             builder.Services.AddHostedService<CupidService>();
 
             var app = builder.Build();

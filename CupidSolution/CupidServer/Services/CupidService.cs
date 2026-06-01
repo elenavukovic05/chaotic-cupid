@@ -9,10 +9,12 @@ namespace CupidServer.Services
     public class CupidService : BackgroundService
     {
         private readonly IHubContext<CupidHub> _hubContext;
+        private readonly UserStore _userStore;
 
-        public CupidService(IHubContext<CupidHub> hubContext)
+        public CupidService(IHubContext<CupidHub> hubContext, UserStore userStore)
         {
             _hubContext = hubContext;
+            _userStore = userStore;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,8 +27,6 @@ namespace CupidServer.Services
         }
 
         private async Task SendLetters() {
-            var users = CupidHub.Users;
-
             List<string> messages = new List<string>
             {
                 "Radujem se nasem susretu!",
@@ -34,14 +34,14 @@ namespace CupidServer.Services
                 "Nisam zainteresovan/a za upoznavanje."
             };
 
-            foreach (var receiver in users.Values)
+            foreach (var receiver in _userStore.GetAll())
             {
                 if (receiver.WaitingConfirmation) continue;
 
                 Person? bestMatch = null;
                 int bestScore = -1;
 
-                foreach (var sender in users.Values)
+                foreach (var sender in _userStore.GetAll())
                 {
                     if (receiver.Username == sender.Username) continue;
 

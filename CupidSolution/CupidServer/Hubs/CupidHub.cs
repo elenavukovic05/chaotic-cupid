@@ -1,18 +1,24 @@
 ﻿using CupidServer.Model;
+using CupidServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace CupidServer.Hubs
 {
     public class CupidHub : Hub
     {
-        public readonly static Dictionary<string, Person> Users = new();
+        private readonly UserStore _userStore;
+
+        public CupidHub(UserStore userStore)
+        {
+            _userStore = userStore;
+        }
 
         public async Task InitSinglePerson(string username, string city, int age, string phoneNumber)
         {
-            if (!Users.ContainsKey(username))
-            { 
-                Person p = new Person(username, city, age, phoneNumber, Context.ConnectionId);
-                Users.Add(username, p);
+            var person = new Person(username, city, age, phoneNumber, Context.ConnectionId);
+
+            if (_userStore.TryAdd(person))
+            {
                 await Clients.Caller.SendAsync("RegistrationSuccessed", $"Uspjesno ste se registrovali kao {username}.");
                 Console.WriteLine($"[SERVER] {username} se prijavio/la.");
             }
@@ -25,21 +31,21 @@ namespace CupidServer.Hubs
 
         public async Task ConfirmReceived()
         {
-            Person? p = Users.Values.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
+            Person? p = _userStore.GetByConnectionId(Context.ConnectionId);
             if (p == null) return;
             p.WaitingConfirmation = false;
         }
 
         public async Task BlockUser(string username)
         {
-            Person? p = Users.Values.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
+            Person? p = _userStore.GetByConnectionId(Context.ConnectionId);
             if (p == null)
             {
                 Console.WriteLine($"[SERVER] Korisnik {username} ne postoji");
                 return;
             }
 
-            if (!Users.ContainsKey(username))
+            if (!_userStore.Contains(username))
             {
                 await Clients.Caller.SendAsync("BlockError", $"Korisnik '{username}' ne postoji.");
                 return;
