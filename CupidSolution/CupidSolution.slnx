@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CupidClient/CupidClient.csproj" Id="3d94b81d-0ddd-4eec-9b1a-f6583665818f" />
+  <Project Path="CupidServer/CupidServer.csproj" Id="8f6c51ba-fe4a-4d03-9efc-9ab4fbbc5633" />
+</Solution>
